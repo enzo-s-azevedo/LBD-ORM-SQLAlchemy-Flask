@@ -10,11 +10,11 @@ def criar_artista(nome, nacionalidade=None):
 
 
 def buscar_artista_por_id(artista_id):
-    return Artista.query.get(artista_id)
+    return db.session.get(Artista, artista_id)
 
 
 def atualizar_artista(artista_id, **kwargs):
-    artista = Artista.query.get(artista_id)
+    artista = db.session.get(Artista, artista_id)
     if not artista:
         return None
     for key, value in kwargs.items():
@@ -25,7 +25,7 @@ def atualizar_artista(artista_id, **kwargs):
 
 
 def remover_artista(artista_id):
-    artista = Artista.query.get(artista_id)
+    artista = db.session.get(Artista, artista_id)
     if not artista:
         return False
     db.session.delete(artista)
@@ -42,11 +42,11 @@ def criar_musica(titulo, duracao_segundos, artista_id):
 
 
 def buscar_musica_por_id(musica_id):
-    return Musica.query.get(musica_id)
+    return db.session.get(Musica, musica_id)
 
 
 def atualizar_musica(musica_id, **kwargs):
-    musica = Musica.query.get(musica_id)
+    musica = db.session.get(Musica, musica_id)
     if not musica:
         return None
     for key, value in kwargs.items():
@@ -57,7 +57,7 @@ def atualizar_musica(musica_id, **kwargs):
 
 
 def remover_musica(musica_id):
-    musica = Musica.query.get(musica_id)
+    musica = db.session.get(Musica, musica_id)
     if not musica:
         return False
     db.session.delete(musica)

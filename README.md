@@ -1,64 +1,47 @@
-# LBD-ORM-SQLAlchemy-Fpaso
+# LBD-ORM-SQLAlchemy — Resumo rápido
 
-Projeto de exemplo que demonstra mapeamento ORM com SQLAlchemy/Flask
-para um sistema de músicas e playlists (entidades fortes, entidade fraca,
-relação N:N com tabela associativa explícita).
+Propósito
+- Projeto de exemplo que demonstra modelagem ORM com SQLAlchemy + Flask para
+	um sistema de músicas e playlists (1:N, N:N com tabela associativa, constraints).
 
-Como funciona (resumo):
-- Modelos em `models.py`: `Artista`, `Usuario`, `Musica`, `Playlist` (chave composta)
-	e `MusicaPlaylist` (tabela associativa com `ordem_na_playlist`).
-- Relacionamentos: 1:N (`Artista`->`Musica`, `Usuario`->`Playlist`) e N:N
-	(`Musica`<->`Playlist` via `MusicaPlaylist`).
-- Constraints: `PRIMARY KEY`, `UNIQUE`, `CHECK`, `ForeignKeyConstraint` (chave composta),
-	`UniqueConstraint` e `cascade` configurados no ORM.
+Como rodar (rápido)
+1) Garanta PostgreSQL local acessível. (Opcional: criar DB e ajustar senha)
 
-Como usar (rápido):
-1. Crie e ative um ambiente virtual:
+```bash
+sudo -u postgres psql -c "CREATE DATABASE projeto_orm;" || true
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+```
+
+2) Preparar ambiente e instalar dependências
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-2. Instale dependências:
-
-```bash
 pip install -r requirements.txt
 ```
 
-3. Configure a conexão com PostgreSQL (opcional):
+3) Rodar com um comando (gera tabelas e popula):
 
 ```bash
-export DATABASE_URL='postgresql://usuario:senha@host:porta/nome_bd'
+chmod +x run_local.sh
+./run_local.sh
 ```
 
-Se não definido, a URI padrão é `postgresql://postgres:postgres@localhost:5432/projeto_orm`.
-
-4. Criar tabelas e popular dados de exemplo:
+Ou manualmente:
 
 ```bash
-python3 popular_bd.py
+python3 popular_bd.py   # popula DB
+python3 app.py         # inicia a app
 ```
 
-5. Iniciar a aplicação (gera tabelas se necessário):
+Arquivos principais (o que cada `.py` faz)
+- `app.py`: cria a app Flask, carrega `Config` e inicializa `db`; ao executar diretamente cria tabelas.
+- `config.py`: configura `SQLALCHEMY_DATABASE_URI` (lê `DATABASE_URL` ou usa padrão local).
+- `models.py`: declara os modelos `Artista`, `Usuario`, `Musica`, `Playlist`, `MusicaPlaylist` com constraints e relacionamentos.
+- `popular_bd.py`: script que cria tabelas, insere dados de exemplo e imprime consultas de demonstração.
+- `crud.py`: operações CRUD para `Artista` e `Musica` (criar/ler/atualizar/remover).
+- `relacionamento.py`: funções para criar playlists e gerenciar músicas nelas (N:N via `MusicaPlaylist`).
 
-```bash
-python3 app.py
-```
+Utilitários
+- `run_local.sh`: automatiza criação do DB, venv, instalação, popula e inicia a app (logs em `app.log`).
 
-Principais arquivos:
-- `app.py` — cria a app Flask e inicializa o `db`.
-- `config.py` — configurações de conexão (SQLALCHEMY_DATABASE_URI).
-- `models.py` — mapeamento ORM completo e comentários explicativos.
-- `crud.py` — funções CRUD para `Artista` e `Musica`.
-- `relacionamento.py` — funções para criar playlists e gerenciar músicas nelas.
-- `popular_bd.py` — script de exemplo para criar tabelas e inserir dados.
-
-Observações rápidas:
-- A tabela `Playlist` é uma entidade fraca (chave composta `playlist_id, usuario_id`).
-- `MusicaPlaylist` é a tabela associativa explícita que guarda o atributo extra
-	`ordem_na_playlist` e usa `ForeignKeyConstraint` para referenciar a chave composta.
-- O ORM substitui SQL manual ao declarar modelos e relacionamentos; o SQLAlchemy
-	gera e executa as instruções necessárias conforme as operações em objetos Python.
-
-Contribuições e dúvidas: abra uma issue ou solicite alterações no README.

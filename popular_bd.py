@@ -81,6 +81,7 @@ def popular():
             (usuarios[0].id, 'Rock do Pablo'),    # (1,1)
             (usuarios[1].id, 'Baladas do Josue'), # (2,2)
             (usuarios[0].id, 'Heavy Riffs'),      # (3,1)
+            (usuarios[1].id, 'Sertanejos do Josue'), # nova playlist do Josue
         ]
 
         playlists = []
@@ -145,8 +146,8 @@ def popular():
         print('\nMúsicas na playlist "Rock do Pablo":')
         mps = MusicaPlaylist.query.filter_by(playlist_id=rock.playlist_id, usuario_id=rock.usuario_id).order_by(MusicaPlaylist.ordem_na_playlist).all()
         for mp in mps:
-            musica = Musica.query.get(mp.musica_id)
-            artista = Artista.query.get(musica.artista_id)
+            musica = db.session.get(Musica, mp.musica_id)
+            artista = db.session.get(Artista, musica.artista_id)
             print(f'ordem {mp.ordem_na_playlist}: {musica.titulo} - artista: {artista.nome}')
 
 

@@ -9,7 +9,7 @@ def criar_playlist(usuario_id, nome_playlist):
     Aqui o `playlist_id` é gerado automaticamente (autoincrement). O `usuario_id` faz parte
     da chave primária e é uma FK para `Usuario`.
     """
-    usuario = Usuario.query.get(usuario_id)
+    usuario = db.session.get(Usuario, usuario_id)
     if not usuario:
         raise ValueError('Usuário não encontrado')
     playlist = Playlist(usuario_id=usuario_id, nome=nome_playlist)
@@ -26,7 +26,7 @@ def adicionar_musica_playlist(usuario_id, playlist_id, musica_id, ordem_na_playl
     relacionamento N:N entre `Musica` e `Playlist` e guarda o atributo adicional `ordem_na_playlist`.
     """
     # Verifica existência
-    musica = Musica.query.get(musica_id)
+    musica = db.session.get(Musica, musica_id)
     if not musica:
         raise ValueError('Música não encontrada')
 
