@@ -8,7 +8,7 @@ def create_app():
     app.config.from_object(Config)
     db.init_app(app)
 
-    # Importa rotas aqui
+    # Ponto de entrada da aplicação Flask.
 
     return app
 
@@ -16,6 +16,6 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     with app.app_context():
-        # Garante que as tabelas sejam criadas quando executar diretamente
+        # Cria as tabelas ao executar o arquivo.
         db.create_all()
         print('Tabelas criadas (se ainda não existiam).')

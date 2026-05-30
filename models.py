@@ -1,79 +1,82 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import CheckConstraint, UniqueConstraint, ForeignKeyConstraint
 
 db = SQLAlchemy()
 
 
+# ARTISTA: entidade forte com PK simples e UNIQUE em nome.
 class Artista(db.Model):
     __tablename__ = 'artista'
 
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(255), nullable=False, unique=True)
+    id = db.Column(db.Integer, primary_key=True) # PK contém SERIAL (autoincrement=True) por padrão
+    nome = db.Column(db.String(255), nullable=False, unique=True) # unique=True = UNIQUE, nullable=False = NOT NULL
     nacionalidade = db.Column(db.String(100))
 
-    # Relacionamento 1:N: um artista tem muitas músicas
-    musicas = db.relationship('Musica', back_populates='artista', cascade='all, delete-orphan')
-
+    # relationship sem presença de FK, representa o lado "1" do relacionamento 1:N com MUSICA
+    musicas = db.relationship('Musica', back_populates='artista', cascade='all, delete-orphan') # relationship para navegar entre objetos
     def __repr__(self):
-        return f"<Artista {self.nome}>"
+        return f"<Artista {self.nome}>" # Representação textual do objeto
 
 
 class Usuario(db.Model):
     __tablename__ = 'usuario'
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), nullable=False, unique=True)
-    email = db.Column(db.String(255), nullable=False, unique=True)
+    id = db.Column(db.Integer, primary_key=True) # PK contém SERIAL (autoincrement=True) por padrão
+    username = db.Column(db.String(100), nullable=False, unique=True) # unique=True = UNIQUE, nullable=False = NOT NULL
+    email = db.Column(db.String(255), nullable=False, unique=True) 
 
-    # Relacionamento 1:N: um usuário tem muitas playlists
-    playlists = db.relationship('Playlist', back_populates='usuario', cascade='all, delete-orphan')
+    # relationship sem presença de FK, representa o lado "1" do relacionamento 1:N com PLAYLIST
+    playlists = db.relationship('Playlist', back_populates='usuario', cascade='all, delete-orphan') # relationship para navegar entre objetos
 
-    def __repr__(self):
-        return f"<Usuario {self.username}>"
+    def __repr__(self): 
+        return f"<Usuario {self.username}>" # Representação textual do objeto
 
 
-# Entidade fraca: PLAYLIST depende de USUARIO; chave primária composta (playlist_id, usuario_id)
+# PLAYLIST: entidade fraca com PK composta por playlist_id e usuario_id.
 class Playlist(db.Model):
     __tablename__ = 'playlist'
 
-    playlist_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id', ondelete='CASCADE'), primary_key=True)
+    playlist_id = db.Column(db.Integer, primary_key=True, autoincrement=True) # PK contém SERIAL (autoincrement=True) por padrão
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id', ondelete='CASCADE'), primary_key=True) 
     nome = db.Column(db.String(255), nullable=False)
-    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_criacao = db.Column(db.DateTime(timezone=True),default=lambda: datetime.now(timezone.utc)
+)
 
-    # relacionamento many-to-one: muitas playlists pertencem a um usuário (1:N)
+    # relationship para navegar entre objetos, representa o lado "1" do relacionamento 1:N com USUÁRIO
     usuario = db.relationship('Usuario', back_populates='playlists')
 
-    # Associação com músicas via tabela associativa explícita (MusicaPlaylist)
+    # Navegação para a tabela N:N com MUSICA.
     musica_playlists = db.relationship('MusicaPlaylist', back_populates='playlist', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"<Playlist {self.nome} ({self.playlist_id},{self.usuario_id})>"
 
 
+ # MUSICA: entidade forte com PK simples, NOT NULL e CHECK na duração.
 class Musica(db.Model):
     __tablename__ = 'musica'
 
-    id = db.Column(db.Integer, primary_key=True)
-    titulo = db.Column(db.String(255), nullable=False)
-    duracao_segundos = db.Column(db.Integer, nullable=False)
-    artista_id = db.Column(db.Integer, db.ForeignKey('artista.id', ondelete='RESTRICT'), nullable=False)
+    id = db.Column(db.Integer, primary_key=True) # PK contém SERIAL (autoincrement=True) por padrão
+    titulo = db.Column(db.String(255), nullable=False) # nullable=False = NOT NULL
+    duracao_segundos = db.Column(db.Integer, nullable=False) # nullable=False = NOT NULL
+    artista_id = db.Column(db.Integer, db.ForeignKey('artista.id', ondelete='RESTRICT'), nullable=False) # ondelete='RESTRICT' impede 
+                                                                                                        # exclusão do pai se houver filhos
 
     __table_args__ = (
-        CheckConstraint('duracao_segundos > 0', name='ck_duracao_positive'),
+        CheckConstraint('duracao_segundos > 0', name='ck_duracao_positive'), # CheckConstraint = CHECK
     )
-
-    # relacionamento many-to-one: muitas músicas pertencem a um artista (1:N)
-    artista = db.relationship('Artista', back_populates='musicas')
-
-    # Associação com playlists via tabela associativa explícita (MusicaPlaylist)
+    # relationship para navegar entre objetos, representa o lado "N" do relacionamento 1:N com ARTISTA (PK)
+    artista = db.relationship('Artista', back_populates='musicas') #
+    
+    #relationship para navegar entre objetos, representa o lado "N" do relacionamento N:N com PLAYLIST (PK composta)
     musica_playlists = db.relationship('MusicaPlaylist', back_populates='musica', cascade='all, delete-orphan')
 
     def __repr__(self):
-        return f"<Musica {self.titulo}>"
+        return f"<Musica {self.titulo}>" # Representação textual do objeto
 
 
+# MUSICA_PLAYLIST: tabela de junção do relacionamento N:N.
 class MusicaPlaylist(db.Model):
     __tablename__ = 'musica_playlist'
 
@@ -83,18 +86,18 @@ class MusicaPlaylist(db.Model):
     ordem_na_playlist = db.Column(db.Integer, nullable=False)
 
     __table_args__ = (
-        # ForeignKeyConstraint referenciando a chave composta da tabela Playlist
+        # FK composta para PLAYLIST.
         ForeignKeyConstraint(['playlist_id', 'usuario_id'], ['playlist.playlist_id', 'playlist.usuario_id'], ondelete='CASCADE'),
+        # Uma ordem só pode existir uma vez por playlist.
         UniqueConstraint('playlist_id', 'usuario_id', 'ordem_na_playlist', name='uq_playlist_ordem'),
     )
 
-    # Relacionamentos de navegação
+    # Navegação para MUSICA.
     musica = db.relationship('Musica', back_populates='musica_playlists')
+    # Navegação para PLAYLIST.
     playlist = db.relationship('Playlist', back_populates='musica_playlists')
 
     def __repr__(self):
         return f"<MusicaPlaylist musica={self.musica_id} playlist=({self.playlist_id},{self.usuario_id}) ordem={self.ordem_na_playlist}>"
 
-    # Nota: esta é a tabela associativa explícita para o relacionamento N:N entre Musica e Playlist.
-    # Cada registro representa a presença de uma música numa playlist específica e guarda o atributo
-    # adicional `ordem_na_playlist`.
+

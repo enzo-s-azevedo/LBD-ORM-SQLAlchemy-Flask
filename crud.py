@@ -1,17 +1,16 @@
 from models import db, Artista, Musica
+from sqlalchemy.exc import IntegrityError
 
 
-# ARTISTA CRUD
+# CRUD de ARTISTA.
 def criar_artista(nome, nacionalidade=None):
     artista = Artista(nome=nome, nacionalidade=nacionalidade)
     db.session.add(artista)
     db.session.commit()
     return artista
 
-
 def buscar_artista_por_id(artista_id):
     return db.session.get(Artista, artista_id)
-
 
 def atualizar_artista(artista_id, **kwargs):
     artista = db.session.get(Artista, artista_id)
@@ -26,14 +25,20 @@ def atualizar_artista(artista_id, **kwargs):
 
 def remover_artista(artista_id):
     artista = db.session.get(Artista, artista_id)
+
     if not artista:
         return False
-    db.session.delete(artista)
-    db.session.commit()
-    return True
+
+    try:
+        db.session.delete(artista)
+        db.session.commit()
+        return True
+    except IntegrityError:
+        db.session.rollback()
+        return False
 
 
-# MUSICA CRUD
+# CRUD de MUSICA
 def criar_musica(titulo, duracao_segundos, artista_id):
     musica = Musica(titulo=titulo, duracao_segundos=duracao_segundos, artista_id=artista_id)
     db.session.add(musica)
