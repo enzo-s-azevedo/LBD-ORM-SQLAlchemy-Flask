@@ -1,6 +1,6 @@
 from app import create_app
 from models import db, Artista, Usuario, Musica, Playlist, MusicaPlaylist
-from relacionamento import criar_playlist, adicionar_musica_playlist
+from relacionamento import criar_playlist, adicionar_musica_playlist, remover_musica_playlist
 
 
 def popular():
@@ -73,23 +73,14 @@ def popular():
 
         print('Músicas inseridas')
 
-        # Cria a playlist "Sertanejos do Josue" para o usuário Josue.
-        josue = Usuario.query.filter_by(username='Josue').first()
-        if not josue:
-            raise ValueError('Usuário Josue não encontrado')
-
-        sertanejos_do_josue = Playlist.query.filter_by(nome='Sertanejos do Josue', usuario_id=josue.id).first()
-        if not sertanejos_do_josue:
-            sertanejos_do_josue = criar_playlist(josue.id, 'Sertanejos do Josue')
-
-        # Cria as demais playlists.
+        # Cria as playlists padrão (sem a playlist de pipeline 'Sertanejos do Josue')
         playlists_data = [
             (usuarios[0].id, 'Rock do Pablo'),    # (1,1)
             (usuarios[1].id, 'Baladas do Josue'), # (2,2)
             (usuarios[0].id, 'Heavy Riffs'),      # (3,1)
         ]
 
-        playlists = [sertanejos_do_josue]
+        playlists = []
         for usuario_id, nome in playlists_data:
             existente = Playlist.query.filter_by(nome=nome, usuario_id=usuario_id).first()
             if existente:

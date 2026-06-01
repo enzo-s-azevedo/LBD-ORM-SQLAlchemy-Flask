@@ -19,3 +19,6 @@ if __name__ == '__main__':
         # Cria as tabelas ao executar o arquivo.
         db.create_all()
         print('Tabelas criadas (se ainda não existiam).')
+    # Inicia servidor Flask para desenvolvimento/execução simples.
+    # Em produção com Neon, prefira usar um WSGI server (gunicorn) e variáveis de ambiente.
+    app.run(host='0.0.0.0', port=5000)
